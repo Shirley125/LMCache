@@ -926,7 +926,7 @@ class LMCacheConnectorV1Impl:
         if not self.use_layerwise:
             return
 
-        if self.kv_role == "kv_consumer":
+        if self.kv_role == "kv_consumer" and not self._save_decode_cache:
             # Don't do save if the role is kv_consumer
             return
         if self._parent._connector_metadata is None:
@@ -1014,7 +1014,7 @@ class LMCacheConnectorV1Impl:
 
         self.lmcache_engine.lookup_unpin(connector_metadata.lookup_requests_in_step)
 
-        if self.kv_role == "kv_consumer":
+        if self.kv_role == "kv_consumer" and not self._save_decode_cache:
             # Don't do save if the role is kv_consumer
             return
 
@@ -1276,7 +1276,7 @@ class LMCacheConnectorV1Impl:
             scheduler_output (SchedulerOutput): the scheduler output object.
         """
 
-        force_skip_save = self.kv_role == "kv_consumer" or self.force_skip_save
+        force_skip_save = (self.kv_role == "kv_consumer" and not self._save_decode_cache) or self.force_skip_save
 
         meta = LMCacheConnectorMetadata()
 
@@ -1341,6 +1341,7 @@ class LMCacheConnectorV1Impl:
                     self._lmcache_chunk_size,
                     load_spec=None,
                     discard_partial_chunks=self._discard_partial_chunks,
+                    save_decode_cache=self._save_decode_cache,
                 )
                 if req_meta is not None:
                     meta.add_request(req_meta)
